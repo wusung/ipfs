@@ -14,7 +14,7 @@ var cmdIpfsVersion = &commander.Command{
 
     Returns the current version of ipfs and exits.
   `,
-	Run:  versionCmd,
+	Run: versionCmd,
 }
 
 func init() {
