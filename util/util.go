@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"os"
+	"os/user"
+	"strings"
 )
 
 var Debug bool
@@ -14,6 +16,20 @@ type Key string
 // Shorthand printing functions.
 func PErr(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, a...)
+}
+
+// tilde expansion
+func TildeExpansion(filename string) (string, error) {
+	if strings.HasPrefix(filename, "~/") {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+
+		dir := usr.HomeDir + "/"
+		filename = strings.Replace(filename, "~/", dir, 1)
+	}
+	return filename, nil
 }
 
 func POut(format string, a ...interface{}) {
