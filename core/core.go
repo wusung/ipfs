@@ -7,7 +7,6 @@ import (
 	"../config"
 	"../merkledag"
 	"../peer"
-	u "../util"
 )
 
 // IPFS Core module. It represents an IPFS instance.
@@ -74,12 +73,4 @@ func NewIpfsNode(cfg *config.Config) (*IpfsNode, error) {
 	}
 
 	return n, nil
-}
-
-func (n *IpfsNode) AddDagNode(nd *merkledag.Node) (u.Key, error) {
-	return n.DAG.Put(nd)
-}
-
-func (n *IpfsNode) GetDagNode(k u.Key) (*merkledag.Node, error) {
-	return n.DAG.Get(k)
 }

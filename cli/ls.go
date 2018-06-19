@@ -33,14 +33,14 @@ func lsCmd(c *commander.Command, inp []string) error {
 		return err
 	}
 
-	nd, err := n.GetDagNode(u.Key(h))
-	if err != nil {
-		return err
-	}
-
 	for _, fn := range inp {
 		// for now only hashes, no path resolution
 		h, err := mh.FromB58String(fn)
+		if err != nil {
+			return err
+		}
+
+		nd, err := n.DAG.Get(u.Key(h))
 		if err != nil {
 			return err
 		}
