@@ -2,7 +2,7 @@ package merkledag
 
 import (
 	"fmt"
-	// mh "github.com/jbenet/go-multihash"
+	u "../util"
 	"testing"
 )
 
@@ -40,6 +40,15 @@ func TestNode(t *testing.T) {
 		} else {
 			fmt.Println("hash:", h)
 		}
+	}
+
+	k, err := n.Key()
+	if err != nil {
+		t.Error(err)
+	} else if k != u.Key(h) {
+		t.Error("Key is not equivalent to multihash")
+	} else {
+		fmt.Println("key: ", k)
 	}
 
 	printn("beep", n1)
