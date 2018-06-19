@@ -28,12 +28,6 @@ func lsCmd(c *commander.Command, inp []string) error {
 		return nil
 	}
 
-	// for now only hashes, no path resolution
-	h, err := mh.FromB58String(inp[0])
-	if err != nil {
-		return err
-	}
-
 	n, err := localNode()
 	if err != nil {
 		return err
@@ -44,8 +38,16 @@ func lsCmd(c *commander.Command, inp []string) error {
 		return err
 	}
 
-	for _, link := range nd.Links {
-		u.POut("%s %d %s\n", link.Hash.B58String(), link.Size, link.Name)
+	for _, fn := range inp {
+		// for now only hashes, no path resolution
+		h, err := mh.FromB58String(fn)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range nd.Links {
+			u.POut("%s %d %s\n", link.Hash.B58String(), link.Size, link.Name)
+		}
 	}
 	return nil
 }
