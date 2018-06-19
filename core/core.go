@@ -1,16 +1,15 @@
 package core
 
 import (
-	config "../config"
+	"../config"
 	ds "../datastore"
 	"fmt"
-	peer "../peer"
+	"../peer"
 )
 
 // IPFS Core module. It represents an IPFS instance.
 
 type IpfsNode struct {
-
 	// the node's configuration
 	Config *config.Config
 
@@ -54,8 +53,8 @@ func NewIpfsNode(cfg *config.Config) (*IpfsNode, error) {
 	}
 
 	n := &IpfsNode{
-		Config: cfg,
-		PeerBook: &peer.PeerBook{},
+		Config:    cfg,
+		PeerBook:  &peer.PeerBook{},
 		Datastore: d,
 	}
 

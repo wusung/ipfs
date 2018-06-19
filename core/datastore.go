@@ -1,7 +1,7 @@
 package core
 
 import (
-	config "../config"
+	"../config"
 	ds "github.com/jbenet/datastore.go"
 	"fmt"
 	lds "github.com/jbenet/datastore.go/leveldb"
@@ -13,8 +13,10 @@ func makeDatastore(cfg *config.Datastore) (ds.Datastore, error) {
 	}
 
 	switch cfg.Type {
-	case "leveldb": return makeLevelDBDatastore(cfg)
-	case "memory": return ds.NewMapDatastore(), nil
+	case "leveldb":
+		return makeLevelDBDatastore(cfg)
+	case "memory":
+		return ds.NewMapDatastore(), nil
 	}
 
 	return nil, fmt.Errorf("Unknown datastore type: %s", cfg.Type)
