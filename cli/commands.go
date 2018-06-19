@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
+	config "../config"
+	core "../core"
 	u "../util"
 	"strings"
 	"time"
@@ -111,3 +113,14 @@ This document lists every ipfs command (including subcommands), along with
 its help page. It can be viewed by running 'ipfs commands help'.
 
 `
+
+
+func localNode() (*core.IpfsNode, error) {
+	//todo implement config file flag
+	cfg, err := config.LoadConfig("")
+	if err != nil {
+		return nil, err
+	}
+
+	return core.NewIpfsNode(cfg)
+}
