@@ -25,7 +25,7 @@ func TestNetAddress(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
+	
 	p := Peer{Id: PeerId(mh)}
 	p.AddAddress(tcp)
 	p.AddAddress(udp)
