@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
-	u "github.com/jbenet/go-ipfs/util"
+	u "../util"
 	mh "github.com/jbenet/go-multihash"
 )
 

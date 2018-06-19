@@ -3,9 +3,9 @@ package core
 import (
 	"fmt"
 	ds "../datastore"
-	blocks "../blocks"
+	"../blocks"
 	"../config"
-	merkledag "../merkledag"
+	"../merkledag"
 	"../peer"
 	u "../util"
 )
