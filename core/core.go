@@ -6,6 +6,7 @@ import (
 	"../blocks"
 	"../config"
 	"../merkledag"
+	path "../path"
 	"../peer"
 )
 
@@ -41,7 +42,7 @@ type IpfsNode struct {
 	DAG *merkledag.DAGService
 
 	// the path resolution system
-	// Resolver *resolver.PathResolver
+	Resolver *path.Resolver
 
 	// the name system, resolves paths to hashes
 	// Namesys *namesys.Namesys
@@ -62,7 +63,7 @@ func NewIpfsNode(cfg *config.Config) (*IpfsNode, error) {
 		return nil, err
 	}
 
-	dag := &merkledag.DAGService{ Blocks: bs }
+	dag := &merkledag.DAGService{Blocks: bs}
 
 	n := &IpfsNode{
 		Config:    cfg,
@@ -70,6 +71,7 @@ func NewIpfsNode(cfg *config.Config) (*IpfsNode, error) {
 		Datastore: d,
 		Blocks:    bs,
 		DAG:       dag,
+		Resolver:  &path.Resolver{DAG: dag},
 	}
 
 	return n, nil

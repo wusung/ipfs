@@ -4,8 +4,7 @@ import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
 	u "../util"
-	mh "github.com/jbenet/go-multihash"
-)
+	)
 
 var cmdIpfsCat = &commander.Command{
 	UsageLine: "cat",
@@ -32,12 +31,7 @@ func catCmd(c *commander.Command, inp []string) error {
 	}
 
 	for _, fn := range inp {
-		// for now only hashes, no path resolution
-		h, err := mh.FromB58String(fn)
-		if err != nil {
-			return err
-		}
-		nd, err := n.DAG.Get(u.Key(h))
+		nd, err := n.Resolver.ResolvePath(fn)
 		if err != nil {
 			return err
 		}
