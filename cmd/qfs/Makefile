@@ -1,11 +1,10 @@
-all: build
+all: install
 
 build:
 	go build
-	mv cli qfs
 
 install: build
-	cp ipfs /usr/local/bin/ipfs
+	go install
 
 clean:
 	rm -f cli/qfs

@@ -1,11 +1,11 @@
-package main
+package qfs
 
 import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
-	config "../config"
-	core "../core"
-	u "../util"
+	config "../../config"
+	core "../../core"
+	u "../../util"
 	"strings"
 	"time"
 )

@@ -1,11 +1,11 @@
-package main
+package qfs
 
 import (
 	"fmt"
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
 	rofs "github.com/jbenet/go-ipfs/fuse/readonly"
-	u "../util"
+	u "../../util"
 )
 
 var cmdIpfsMount = &commander.Command{

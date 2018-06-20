@@ -1,10 +1,10 @@
-package main
+package qfs
 
 import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
-	mdag "../merkledag"
-	u "../util"
+	mdag "../../merkledag"
+	u "../../util"
 	mh "github.com/jbenet/go-multihash"
 )
 

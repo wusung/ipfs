@@ -1,13 +1,13 @@
-package main
+package qfs
 
 import (
 	"fmt"
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
-	"../core"
-	"../importer"
-	dag "../merkledag"
-	u "../util"
+	"../../core"
+	"../../importer"
+	dag "../../merkledag"
+	u "../../util"
 	mh "github.com/jbenet/go-multihash"
 	"io/ioutil"
 	"os"

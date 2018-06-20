@@ -1,9 +1,9 @@
-package main
+package qfs
 
 import (
 	"github.com/gonuts/flag"
 	"github.com/jbenet/commander"
-	u "../util"
+	u "../../util"
 	)
 
 var cmdIpfsCat = &commander.Command{

@@ -1,8 +1,8 @@
-package main
+package qfs
 
 import (
 	"github.com/jbenet/commander"
-	u "../util"
+	u "../../util"
 )
 
 const Version = "0.1.0"
