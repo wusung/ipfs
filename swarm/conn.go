@@ -2,10 +2,11 @@ package swarm
 
 import (
 	"fmt"
-	"net"
+	peer "../peer"
+	u "../util"
+	msgio "github.com/jbenet/go-msgio"
 	ma "github.com/jbenet/go-multiaddr"
-	"../peer"
-	"github.com/jbenet/go-msgio"
+	"net"
 )
 
 const ChanBuffer = 10
@@ -19,6 +20,8 @@ type Conn struct {
 	Outgoing *msgio.Chan
 	Incoming *msgio.Chan
 }
+
+type ConnMap map[u.Key]*Conn
 
 func Dial(network string, peer *peer.Peer) (*Conn, error) {
 	addr := peer.NetAddress(network)
