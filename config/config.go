@@ -6,7 +6,7 @@ import (
 )
 
 type Identity struct {
-	PeerId string
+	PeerID string
 }
 
 type Datastore struct {

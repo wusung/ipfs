@@ -23,6 +23,8 @@ type Conn struct {
 
 type ConnMap map[u.Key]*Conn
 
+// ConnMap maps Keys (Peer.IDs) to Connections.
+
 func Dial(network string, peer *peer.Peer) (*Conn, error) {
 	addr := peer.NetAddress(network)
 	if addr == nil {
