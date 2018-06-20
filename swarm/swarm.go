@@ -1,10 +1,16 @@
 package swarm
 
 import (
-	"github.com/btcsuite/btcd/peer"
 	"fmt"
+	peer "../peer"
+	ma "github.com/jbenet/go-multiaddr"
+	u "../util"
+	"sync"
+	"net"
 )
 
+// Message represents a packet of information sent to or received from a
+// particular Peer.
 type Message struct {
 	// To or from, depending on direction.
 	Peer *peer.Peer
@@ -13,6 +19,7 @@ type Message struct {
 	Data []byte
 }
 
+// Chan is a swam channel, which provides duplex communication and errors.
 type Chan struct {
 	Outgoing chan Message
 	Incoming chan Message
@@ -20,6 +27,7 @@ type Chan struct {
 	Close    chan bool
 }
 
+// NewChan constructs a Chan instance, with given buffer size bufsize.
 func NewChan(bufsize int) *Chan {
 	return &Chan{
 		Outgoing: make(chan Message, bufsize),
@@ -29,19 +37,72 @@ func NewChan(bufsize int) *Chan {
 	}
 }
 
+// Swarm is a connection muxer, allowing connections to other peers to
+// be opened and closed, while still using the same Chan for all
+// communication. The Chan sends/receives Messages, which note the
+// destination or source Peer.
 type Swarm struct {
-  Conns map[string]*Conn
+	Chan      *Chan
+	conns     ConnMap
+	connsLock sync.RWMutex
+
+	local	  *peer.Peer
 }
 
-func NewSwarm() *Swarm {
+// NewSwarm constructs a Swarm, with a Chan.
+func NewSwarm(local *peer.Peer) *Swarm {
 	s := &Swarm{
 		Chan:  NewChan(10),
 		conns: ConnMap{},
+		local: local,
 	}
 	go s.fanOut()
 	return s
 }
 
+// Open listeners for each network the swarm should listen on
+func (s *Swarm) Listen() {
+	for _,addr := range s.local.Addresses {
+		err := s.connListen(addr)
+		if err != nil {
+			u.PErr("Failed to listen on: %s [%s]", addr, err)
+		}
+	}
+}
+
+// Listen for new connections on the given multiaddr
+func (s *Swarm) connListen(maddr *ma.Multiaddr) error {
+	netstr, addr, err := maddr.DialArgs()
+	if err != nil {
+		return err
+	}
+
+	list, err := net.Listen(netstr, addr)
+	if err != nil {
+		return err
+	}
+
+	// Accept and handle new connections on this listener until it errors
+	go func() {
+		for {
+			nconn,err := list.Accept()
+			if err != nil {
+				u.PErr("Failed to accept connection: %s - %s", netstr, addr)
+				return
+			}
+			go s.handleNewConn(nconn)
+		}
+	}()
+
+	return nil
+}
+
+// Handle getting ID from this peer and adding it into the map
+func (s *Swarm) handleNewConn(nconn net.Conn) {
+	panic("Not yet implemented!")
+}
+
+// Close closes a swarm.
 func (s *Swarm) Close() {
 	s.connsLock.RLock()
 	l := len(s.conns)
@@ -54,6 +115,14 @@ func (s *Swarm) Close() {
 	s.Chan.Close <- true // listener
 }
 
+// Dial connects to a peer.
+//
+// The idea is that the client of Swarm does not need to know what network
+// the connection will happen over. Swarm can use whichever it choses.
+// This allows us to use various transport protocols, do NAT traversal/relay,
+// etc. to achive connection.
+//
+// For now, Dial uses only TCP. This will be extended.
 func (s *Swarm) Dial(peer *peer.Peer) (*Conn, error) {
 	k := peer.Key()
 
@@ -137,4 +206,3 @@ Loop:
 	delete(s.conns, conn.Peer.Key())
 	s.connsLock.Unlock()
 }
-
