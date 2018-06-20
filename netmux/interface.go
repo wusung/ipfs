@@ -8,7 +8,6 @@ import (
 // to various networks (tcp, udp, webrtc, etc).
 // It keeps the relevant connections open.
 type Interface struct {
-
 	// Interface network (e.g. udp4, tcp6)
 	Network string
 
@@ -38,10 +37,10 @@ func NewUDPInterface(network, addr string) (*Interface, error) {
 	}
 
 	i := &Interface{
-		Network: network,
-		Address: addr,
+		Network:         network,
+		Address:         addr,
 		ResolvedAddress: raddr,
-		conn: conn,
+		conn:            conn,
 	}
 
 	go i.processUDPInput()
