@@ -122,7 +122,7 @@ its help page. It can be viewed by running 'ipfs commands help'.
 
 func localNode() (*core.IpfsNode, error) {
 	//todo implement config file flag
-	cfg, err := config.ConfigLoad("")
+	cfg, err := config.Load("")
 	if err != nil {
 		return nil, err
 	}
