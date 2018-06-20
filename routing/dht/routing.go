@@ -1,15 +1,16 @@
 package dht
 
 import (
+	"math/rand"
+	"time"
 	peer "../../peer"
 	swarm "../../swarm"
 	u "../../util"
-	"time"
 )
 
 // TODO: determine a way of creating and managing message IDs
 func GenerateMessageID() uint64 {
-	return 4
+	return uint64(rand.Uint32()) << 32 & uint64(rand.Uint32())
 }
 
 // This file implements the Routing interface for the IpfsDHT struct.
@@ -68,9 +69,6 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	case resp := <-response_chan:
 		return resp.Data, nil
 	}
-
-	// Should never be hit
-	return nil, nil
 }
 
 // Value provider layer of indirection.

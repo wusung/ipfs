@@ -1,10 +1,11 @@
 package dht
 
 import (
+	"sync"
 	"../../swarm"
 	u "../../util"
 	"code.google.com/p/goprotobuf/proto"
-	"sync"
+	"github.com/btcsuite/btcd/peer"
 )
 
 // TODO. SEE https://github.com/jbenet/node-ipfs/blob/master/submodules/ipfs-dht/index.js
@@ -15,6 +16,9 @@ type IpfsDHT struct {
 	routes RoutingTable
 
 	network *swarm.Swarm
+
+	// local data (TEMPORARY: until we formalize data storage with datastore)
+	data map[string][]byte
 
 	// map of channels waiting for reply messages
 	listeners  map[uint64]chan *swarm.Message
@@ -38,28 +42,71 @@ func (dht *IpfsDHT) handleMessages() {
 			}
 
 			// Note: not sure if this is the correct place for this
-			dht.listenLock.RLock()
-			ch, ok := dht.listeners[pmes.GetId()]
-			dht.listenLock.RUnlock()
-			if ok {
-				ch <- mes
+			if pmes.GetResponse() {
+				dht.listenLock.RLock()
+				ch, ok := dht.listeners[pmes.GetId()]
+				dht.listenLock.RUnlock()
+				if ok {
+					ch <- mes
+				}
+
+				// this is expected behaviour during a timeout
+				u.DOut("Received response with nobody listening...")
+				continue
 			}
 			//
 
-			// Do something else with the messages?
 			switch pmes.GetType() {
-			case DHTMessage_ADD_PROVIDER:
-			case DHTMessage_FIND_NODE:
-			case DHTMessage_GET_PROVIDERS:
 			case DHTMessage_GET_VALUE:
-			case DHTMessage_PING:
+				dht.handleGetValue(mes.Peer, pmes)
 			case DHTMessage_PUT_VALUE:
+			case DHTMessage_FIND_NODE:
+			case DHTMessage_ADD_PROVIDER:
+			case DHTMessage_GET_PROVIDERS:
+			case DHTMessage_PING:
 			}
 
 		case <-dht.shutdown:
 			return
 		}
 	}
+}
+
+func (dht *IpfsDHT) handleGetValue(p *peer.Peer, pmes *DHTMessage) {
+	val, found := dht.data[pmes.GetKey()]
+	if found {
+		isResponse := true
+		resp := new (DHTMessage)
+		resp.Response = &isResponse
+		resp.Id = pmes.Id
+		resp.Key = pmes.Key
+		resp.Value = pmes.Value
+	} else {
+		// Find closest node(s) to desired key and reply with that info
+		// TODO: this will need some other metadata in the protobuf message
+		//			to signal to the querying node that the data its receiving
+		//			is actually a list of other nodes
+	}
+}
+
+func (dht *IpfsDHT) handlePutValue(p *peer.Peer, pmes *DHTMessage)  {
+	panic("Not implemented.")
+}
+
+func (dht *IpfsDHT) handleFindNode(p *peer.Peer, pmes *DHTMessage) {
+	panic("Not implemented.")
+}
+
+func (dht *IpfsDHT) handlePing(p *peer.Peer, pmes *DHTMessage)  {
+	isResponse := true
+	resp := new(DHTMessage)
+	resp.Id = pmes.Id
+	resp.Response = &isResponse
+
+	mes := new(swarm.Message)
+	mes.Peer = p
+	mes.Data = []byte(resp.String())
+	dht.network.Chan.Outgoing <- mes
 }
 
 // Register a handler for a specific message ID, used for getting replies
@@ -70,4 +117,9 @@ func (dht *IpfsDHT) ListenFor(mesid uint64) <-chan *swarm.Message {
 	dht.listeners[mesid] = lchan
 	dht.listenLock.Unlock()
 	return lchan
+}
+
+func (dht *IpfsDHT) Halt()  {
+	dht.shutdown <- struct{}{}
+	dht.network.Close()
 }
