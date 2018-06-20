@@ -19,7 +19,7 @@ type Config struct {
 	Datastore *Datastore
 }
 
-var defaultConfigFilePath = "~/.go-ipfs/config"
+var DefaultConfigFilePath = "~/.go-ipfs/config"
 var defaultConfigFile = `{
   "identity": {},
   "datastore": {
@@ -31,7 +31,7 @@ var defaultConfigFile = `{
 
 func LoadConfig(filename string) (*Config, error) {
 	if len(filename) == 0 {
-		filename = defaultConfigFilePath
+		filename = DefaultConfigFilePath
 	}
 
 	// tilde expansion on config file
