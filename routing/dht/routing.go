@@ -2,11 +2,10 @@ package dht
 
 import (
 	"time"
-	peer "../../peer"
+	"../../peer"
 	u "../../util"
-	swarm "../../swarm"
+	"../../swarm"
 )
-
 
 // This file implements the Routing interface for the IpfsDHT struct.
 
@@ -53,7 +52,6 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	}
 }
 
-
 // Value provider layer of indirection.
 // This is what DSHTs (Coral and MainlineDHT) do to store large values in a DHT.
 
@@ -66,7 +64,6 @@ func (s *IpfsDHT) Provide(key u.Key) (error) {
 func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) (*peer.Peer, error) {
 	return nil, u.ErrNotImplemented
 }
-
 
 // Find specific Peer
 

@@ -3,7 +3,7 @@ package bitswap
 import (
 	"time"
 	mh "github.com/jbenet/go-multihash"
-	blocks "../blocks"
+	"../blocks"
 	u "../util"
 )
 
@@ -22,7 +22,7 @@ type Ledger struct {
 }
 
 type BitSwap struct {
-	Ledgers map[u.Key]*Ledger  // key is peer.ID
+	Ledgers  map[u.Key]*Ledger       // key is peer.ID
 	HaveList map[u.Key]*blocks.Block // key is multihash
 	WantList []*mh.Multihash
 }

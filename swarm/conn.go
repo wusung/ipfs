@@ -2,9 +2,9 @@ package swarm
 
 import (
 	"fmt"
-	peer "../peer"
+	"../peer"
 	u "../util"
-	msgio "github.com/jbenet/go-msgio"
+	"github.com/jbenet/go-msgio"
 	ma "github.com/jbenet/go-multiaddr"
 	"net"
 )
