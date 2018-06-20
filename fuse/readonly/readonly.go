@@ -1,5 +1,5 @@
 // A Go mirror of libfuse's hello.c
-// +build !windows
+// +build linux darwin freebsd
 
 package readonly
 
