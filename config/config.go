@@ -1,19 +1,22 @@
 package config
 
 import (
-	"os"
 	u "../util"
+	"os"
 )
 
+// Identity tracks the configuration of the local node's identity.
 type Identity struct {
 	PeerID string
 }
 
+// Datastore tracks the configuration of the datastore.
 type Datastore struct {
 	Type string
 	Path string
 }
 
+// Config is used to load IPFS config files.
 type Config struct {
 	Identity  *Identity
 	Datastore *Datastore
@@ -29,13 +32,19 @@ var defaultConfigFile = `{
 }
 `
 
-func LoadConfig(filename string) (*Config, error) {
+// ConfigFilename returns the proper tilde expanded config filename.
+func ConfigFilename(filename string) (string, error) {
 	if len(filename) == 0 {
-		filename = DefaultConfigFilePath
+		filename = defaultConfigFilePath
 	}
 
 	// tilde expansion on config file
-	filename, err := u.TildeExpansion(filename)
+	return u.TildeExpansion(filename)
+}
+
+// ConfigLoad reads given file and returns the read config, or error.
+func ConfigLoad(filename string) (*Config, error) {
+	filename, err := ConfigFilename(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -53,10 +62,14 @@ func LoadConfig(filename string) (*Config, error) {
 
 	// tilde expansion on datastore path
 	cfg.Datastore.Path, err = u.TildeExpansion(cfg.Datastore.Path)
-
 	if err != nil {
 		return nil, err
 	}
 
 	return &cfg, err
+}
+
+// Set sets the value of a particular config key
+func Set(filename, key, value string) error {
+	return nil
 }
