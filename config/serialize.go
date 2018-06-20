@@ -11,10 +11,7 @@ import (
 	"strings"
 )
 
-func ReadFile(filename string) ([]byte, error) {
-	return ioutil.ReadFile(filename)
-}
-
+// WriteFile writes the given buffer `buf` into file named `filename`.
 func WriteFile(filename string, buf []byte) error {
 	err := os.MkdirAll(path.Dir(filename), 0777)
 	if err != nil {
@@ -24,8 +21,9 @@ func WriteFile(filename string, buf []byte) error {
 	return ioutil.WriteFile(filename, buf, 0666)
 }
 
+// ReadConfigFile reads the config from `filename` into `cfg`.
 func ReadConfigFile(filename string, cfg *Config) error {
-	buf, err := ReadFile(filename)
+	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
@@ -33,6 +31,7 @@ func ReadConfigFile(filename string, cfg *Config) error {
 	return json.Unmarshal(buf, cfg)
 }
 
+// WriteConfigFile writes the config from `cfg` into `filename`.
 func WriteConfigFile(filename string, cfg *Config) error {
 	buf, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
@@ -42,13 +41,12 @@ func WriteConfigFile(filename string, cfg *Config) error {
 	return WriteFile(filename, buf)
 }
 
-
 // WriteConfigFile writes the config from `cfg` into `filename`.
 func GetValueInConfigFile(key string) (value string, err error) {
 	// reading config file
 	attrs := strings.Split(key, ".")
 
-	filename, _ := u.TildeExpansion(DefaultConfigFilePath)
+	filename, _ := u.TildeExpansion(defaultConfigFilePath)
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", err
@@ -85,7 +83,7 @@ func SetValueInConfigFile(key string, values []string) error {
 	assignee := strings.Join(values, " ")
 	attrs := strings.Split(key, ".")
 
-	filename, _ := u.TildeExpansion(DefaultConfigFilePath)
+	filename, _ := u.TildeExpansion(defaultConfigFilePath)
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
