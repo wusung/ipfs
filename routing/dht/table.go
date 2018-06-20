@@ -3,6 +3,9 @@ package dht
 import (
 	"container/list"
 	"bytes"
+
+	peer "../..//peer"
+	u "../../util"
 )
 
 // ID for IpfsDHT should be a byte slice, to allow for simpler operations
@@ -19,6 +22,11 @@ type Bucket []*list.List
 type RoutingTable struct {
 	// kBuckets define all the fingers to other nodes.
 	Buckets []Bucket
+}
+
+//TODO: make this accept an ID, requires method of converting keys to IDs
+func (rt *RoutingTable) NearestNode(key u.Key) *peer.Peer {
+	panic("Function not implemented.")
 }
 
 func (id ID) Equal(other ID) bool {

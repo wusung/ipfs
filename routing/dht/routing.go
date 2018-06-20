@@ -1,24 +1,35 @@
 package dht
 
 import (
-	"time"
-	"../../peer"
+	peer "../../peer"
+	swarm "../../swarm"
 	u "../../util"
-	"../../swarm"
+	"time"
 )
+
+// TODO: determine a way of creating and managing message IDs
+func GenerateMessageID() uint64 {
+	return 4
+}
 
 // This file implements the Routing interface for the IpfsDHT struct.
 
 // Basic Put/Get
 
 // PutValue adds value corresponding to given Key.
-func (s *IpfsDHT) PutValue(key u.Key, value []byte) (error) {
+func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 	var p *peer.Peer
 	p = s.routes.NearestNode(key)
 
-	pmes := new(PutValue)
-	pmes.Key = &key
+	pmes_type := DHTMessage_PUT_VALUE
+	str_key := string(key)
+	mes_id := GenerateMessageID()
+
+	pmes := new(DHTMessage)
+	pmes.Type = &pmes_type
+	pmes.Key = &str_key
 	pmes.Value = value
+	pmes.Id = &mes_id
 
 	mes := new(swarm.Message)
 	mes.Data = []byte(pmes.String())
@@ -33,30 +44,40 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	var p *peer.Peer
 	p = s.routes.NearestNode(key)
 
+	str_key := string(key)
+	mes_type := DHTMessage_GET_VALUE
+	mes_id := GenerateMessageID()
 	// protobuf structure
-	pmes := new(GetValue)
-	pmes.Key = &key
-	pmes.Id = GenerateMessageID()
+	pmes := new(DHTMessage)
+	pmes.Type = &mes_type
+	pmes.Key = &str_key
+	pmes.Id = &mes_id
 
 	mes := new(swarm.Message)
 	mes.Data = []byte(pmes.String())
 	mes.Peer = p
 
-	response_chan := s.network.ListenFor(pmes.Id)
+	response_chan := s.ListenFor(*pmes.Id)
 
+	// Wait for either the response or a timeout
 	timeup := time.After(timeout)
 	select {
 	case <-timeup:
-		return nil, timeoutError
+		// TODO: unregister listener
+		return nil, u.ErrTimeout
 	case resp := <-response_chan:
+		return resp.Data, nil
 	}
+
+	// Should never be hit
+	return nil, nil
 }
 
 // Value provider layer of indirection.
 // This is what DSHTs (Coral and MainlineDHT) do to store large values in a DHT.
 
 // Announce that this node can provide value for given key
-func (s *IpfsDHT) Provide(key u.Key) (error) {
+func (s *IpfsDHT) Provide(key u.Key) error {
 	return u.ErrNotImplemented
 }
 
