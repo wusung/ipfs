@@ -7,6 +7,7 @@ import (
 	"../peer"
 	ma "github.com/jbenet/go-multiaddr"
 	u "../util"
+	ident "../identify"
 )
 
 // Message represents a packet of information sent to or received from a
@@ -108,27 +109,23 @@ func (s *Swarm) connListen(maddr *ma.Multiaddr) error {
 
 // Handle getting ID from this peer and adding it into the map
 func (s *Swarm) handleNewConn(nconn net.Conn) {
-	p := MakePeerFromConn(nconn)
 
-	var addr *ma.Multiaddr
-
-	//naddr := nconn.RemoteAddr()
-	//addr := ma.FromDialArgs(naddr.Network(), naddr.String())
+	p := new(peer.Peer)
 
 	conn := &Conn{
 		Peer: p,
-		Addr: addr,
+		Addr: nil,
 		Conn: nconn,
 	}
 
 	newConnChans(conn)
-	go s.fanIn(conn)
-}
 
-// Negotiate with peer for its ID and create a peer object
-// TODO: this might belong in the peer package
-func MakePeerFromConn(conn net.Conn) *peer.Peer {
-	panic("Not yet implemented.")
+	err := ident.Handshake(s.local, p, conn.Incoming.MsgChan, conn.Outgoing.MsgChan)
+	if err != nil {
+		panic(err)
+	}
+
+	s.StartConn(conn)
 }
 
 // Close closes a swarm.
@@ -169,15 +166,19 @@ func (s *Swarm) Dial(peer *peer.Peer) (*Conn, error) {
 		return nil, err
 	}
 
-	s.StartConn(k, conn)
+	s.StartConn(conn)
 	return conn, nil
 }
 
-func (s *Swarm) StartConn(k u.Key, conn *Conn) {
+func (s *Swarm) StartConn(conn *Conn) {
+	if (conn == nil) {
+		panic("tried to start nil Conn!")
+	}
 
+	u.DOut("Starting connection: %s", string(conn.Peer.ID))
 	// add to conns
 	s.connsLock.Lock()
-	s.conns[k] = conn
+	s.conns[conn.Peer.Key()] = conn
 	s.connsLock.Unlock()
 
 	// kick off reader goroutine
@@ -191,6 +192,7 @@ func (s *Swarm) fanOut() {
 		case <-s.Chan.Close:
 			return // told to close.
 		case msg, ok := <-s.Chan.Outgoing:
+			u.DOut("fanOut: outgoing message for: '%s'", msg.Peer.Key())
 			if !ok {
 				return
 			}
@@ -198,14 +200,17 @@ func (s *Swarm) fanOut() {
 			s.connsLock.RLock()
 			conn, found := s.conns[msg.Peer.Key()]
 			s.connsLock.RUnlock()
+
 			if !found {
 				e := fmt.Errorf("Sent msg to peer without open conn: %v",
 					msg.Peer)
 				s.Chan.Errors <- e
+				continue
 			}
 
 			// queue it in the connection's buffer
 			conn.Outgoing.MsgChan <- msg.Data
+			u.DOut("fanOut: message off.")
 		}
 	}
 }
@@ -225,6 +230,7 @@ Loop:
 			break Loop
 
 		case data, ok := <-conn.Incoming.MsgChan:
+			u.DOut("fanIn: got message from incoming channel.")
 			if !ok {
 				e := fmt.Errorf("Error retrieving from conn: %v", conn)
 				s.Chan.Errors <- e
@@ -234,6 +240,7 @@ Loop:
 			// wrap it for consumers.
 			msg := &Message{Peer: conn.Peer, Data: data}
 			s.Chan.Incoming <- msg
+			u.DOut("fanIn: message off.")
 		}
 	}
 

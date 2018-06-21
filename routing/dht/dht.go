@@ -54,6 +54,10 @@ func NewDHT(p *peer.Peer) (*IpfsDHT, error) {
 	return dht, nil
 }
 
+func (dht *IpfsDHT) Start()  {
+	go dht.handleMessages()
+}
+
 // Connect to a new peer at the given address
 func (dht *IpfsDHT) Connect(addr *ma.Multiaddr) error {
 	peer := new(peer.Peer)
@@ -64,12 +68,12 @@ func (dht *IpfsDHT) Connect(addr *ma.Multiaddr) error {
 		return err
 	}
 
-	err = identify.Handshake(dht.self, conn)
+	err = identify.Handshake(dht.self, peer, conn.Incoming.MsgChan, conn.Outgoing.MsgChan)
 	if err != nil {
 		return err
 	}
 
-	dht.network.StartConn(conn.Peer.Key(), conn)
+	dht.network.StartConn(conn)
 
 	// TODO: Add this peer to our routing table
 	return nil
@@ -78,9 +82,11 @@ func (dht *IpfsDHT) Connect(addr *ma.Multiaddr) error {
 // Read in all messages from swarm and handle them appropriately
 // NOTE: this function is just a quick sketch
 func (dht *IpfsDHT) handleMessages() {
+	u.DOut("Being message handling routine")
 	for {
 		select {
 		case mes := <-dht.network.Chan.Incoming:
+			u.DOut("recieved message from swarm.")
 			pmes := new(DHTMessage)
 			err := proto.Unmarshal(mes.Data, pmes)
 			if err != nil {
@@ -115,7 +121,8 @@ func (dht *IpfsDHT) handleMessages() {
 			case DHTMessage_PING:
 				dht.handleFindNode(mes.Peer, pmes)
 			}
-
+		case err := <-dht.network.Chan.Errors:
+			panic(err)
 		case <-dht.shutdown:
 			return
 		}
@@ -156,10 +163,6 @@ func (dht *IpfsDHT) handlePutValue(p *peer.Peer, pmes *DHTMessage) {
 	}
 }
 
-func (dht *IpfsDHT) handleFindNode(p *peer.Peer, pmes *DHTMessage) {
-	panic("Not implemented.")
-}
-
 func (dht *IpfsDHT) handlePing(p *peer.Peer, pmes *DHTMessage) {
 	isResponse := true
 	resp := new(DHTMessage)
@@ -170,6 +173,17 @@ func (dht *IpfsDHT) handlePing(p *peer.Peer, pmes *DHTMessage) {
 	dht.network.Chan.Outgoing <- swarm.NewMessage(p, []byte(resp.String()))
 }
 
+func (dht *IpfsDHT) handleFindNode(p * peer.Peer, pmes *DHTMessage)  {
+	panic("Not implemented.")
+}
+
+func (dht *IpfsDHT) handleGetProviders(p * peer.Peer, pmes *DHTMessage)  {
+	panic("Not implemented.")
+}
+
+func (dht *IpfsDHT) handleAddProvider(p * peer.Peer, pmes *DHTMessage)  {
+	panic("Not implemented.")
+}
 
 // Register a handler for a specific message ID, used for getting replies
 // to certain messages (i.e. response to a GET_VALUE message)
@@ -200,6 +214,7 @@ func (dht *IpfsDHT) Halt() {
 // Ping a node, log the time it took
 func (dht *IpfsDHT) Ping(p *peer.Peer, timeout time.Duration)  {
 	// Thoughts: maybe this should accept an ID and do a peer lookup?
+	u.DOut("Enter Ping.")
 	id := GenerateMessageID()
 	mes_type := DHTMessage_PING
 	pmes := new(DHTMessage)
