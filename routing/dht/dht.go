@@ -13,7 +13,7 @@ import (
 
 	ds "github.com/jbenet/datastore.go"
 
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/miekg/dns"
 )
 
@@ -41,12 +41,14 @@ type IpfsDHT struct {
 }
 
 func NewDHT(p *peer.Peer) (*IpfsDHT, error) {
+	network := swarm.NewSwarm(p)
+	err := network.Listen()
+	if err != nil {
+		return nil, err
+	}
+
 	dht := new(IpfsDHT)
-
-	dht.network = swarm.NewSwarm(p)
-	//TODO: should Listen return an error?
-	dht.network.Listen()
-
+	dht.network = network
 	dht.datastore = ds.NewMapDatastore()
 	dht.self = p
 	dht.listeners = make(map[uint64]chan *swarm.Message)
@@ -54,6 +56,7 @@ func NewDHT(p *peer.Peer) (*IpfsDHT, error) {
 	return dht, nil
 }
 
+// Start up background goroutines needed by the DHT
 func (dht *IpfsDHT) Start()  {
 	go dht.handleMessages()
 }
@@ -111,6 +114,7 @@ func (dht *IpfsDHT) handleMessages() {
 
 			switch pmes.GetType() {
 			case DHTMessage_GET_VALUE:
+				u.DOut("Got message type: %d", pmes.GetType())
 				dht.handleGetValue(mes.Peer, pmes)
 			case DHTMessage_PUT_VALUE:
 				dht.handlePutValue(mes.Peer, pmes)
@@ -119,7 +123,7 @@ func (dht *IpfsDHT) handleMessages() {
 			case DHTMessage_ADD_PROVIDER:
 			case DHTMessage_GET_PROVIDERS:
 			case DHTMessage_PING:
-				dht.handleFindNode(mes.Peer, pmes)
+				dht.handlePing(mes.Peer, pmes)
 			}
 		case err := <-dht.network.Chan.Errors:
 			panic(err)
@@ -133,18 +137,15 @@ func (dht *IpfsDHT) handleGetValue(p *peer.Peer, pmes *DHTMessage) {
 	dskey := ds.NewKey(pmes.GetKey())
 	i_val, err := dht.datastore.Get(dskey)
 	if err == nil {
-		isResponse := true
-		resp := new(DHTMessage)
-		resp.Response = &isResponse
-		resp.Id = pmes.Id
-		resp.Key = pmes.Key
+		resp := &pDHTMessage{
+			Response: true,
+			Id: *pmes.Id,
+			Key: *pmes.Key,
+			Value: i_val.([]byte),
+		}
 
-		val := i_val.([]byte)
-		resp.Value = val
-
-		mes := new(swarm.Message)
-		mes.Peer = p
-		mes.Data = []byte(resp.String())
+		mes := swarm.NewMessage(p, resp.ToProtobuf())
+		dht.network.Chan.Outgoing <- mes
 	} else if err == ds.ErrNotFound {
 		// Find closest node(s) to desired key and reply with that info
 		// TODO: this will need some other metadata in the protobuf message
@@ -164,11 +165,11 @@ func (dht *IpfsDHT) handlePutValue(p *peer.Peer, pmes *DHTMessage) {
 }
 
 func (dht *IpfsDHT) handlePing(p *peer.Peer, pmes *DHTMessage) {
-	isResponse := true
-	resp := new(DHTMessage)
-	resp.Id = pmes.Id
-	resp.Response = &isResponse
-	resp.Type = pmes.Type
+	resp := &pDHTMessage{
+		Id: pmes.Id,
+		Response: true,
+		Type: pmes.Type,
+	}
 
 	dht.network.Chan.Outgoing <- swarm.NewMessage(p, []byte(resp.String()))
 }

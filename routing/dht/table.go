@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"bytes"
 
-	peer "../..//peer"
+	peer "../../peer"
 	u "../../util"
 )
 
