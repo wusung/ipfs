@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	ds "../datastore"
+	ds "github.com/ipfs/go-datastore"
 	"../blocks"
 	"../config"
 	"../merkledag"

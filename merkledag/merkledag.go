@@ -4,7 +4,7 @@ import (
 	"fmt"
 	blocks "../blocks"
 	u "../util"
-	mh "github.com/jbenet/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 )
 
 // can't use []byte/Multihash for keys :(

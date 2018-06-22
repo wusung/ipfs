@@ -5,7 +5,7 @@ import (
 	"github.com/jbenet/commander"
 	mdag "../../merkledag"
 	u "../../util"
-	mh "github.com/jbenet/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 )
 
 var cmdIpfsRefs = &commander.Command{

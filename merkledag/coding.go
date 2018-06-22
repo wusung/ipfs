@@ -2,7 +2,7 @@ package merkledag
 
 import (
 	"fmt"
-	mh "github.com/jbenet/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 )
 
 // for now, we use a PBNode intermediate thing.

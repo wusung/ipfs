@@ -2,8 +2,8 @@ package peer
 
 import (
 	u "../util"
-	ma "github.com/jbenet/go-multiaddr"
-	mh "github.com/jbenet/go-multihash"
+	ma "github.com/multiformats/go-multiaddr"
+	mh "github.com/multiformats/go-multihash"
 	"bytes"
 )
 

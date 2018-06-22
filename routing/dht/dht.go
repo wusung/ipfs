@@ -9,9 +9,9 @@ import (
 	u		"../../util"
 	identify "../../identify"
 
-	ma "github.com/jbenet/go-multiaddr"
+	ma "github.com/multiformats/go-multiaddr"
 
-	ds "github.com/jbenet/datastore.go"
+	ds "github.com/ipfs/go-datastore"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/miekg/dns"

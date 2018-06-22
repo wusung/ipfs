@@ -2,7 +2,7 @@ package bitswap
 
 import (
 	"time"
-	mh "github.com/jbenet/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 	"../blocks"
 	u "../util"
 )

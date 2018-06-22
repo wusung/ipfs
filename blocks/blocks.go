@@ -2,9 +2,9 @@ package blocks
 
 import (
 	"fmt"
-	ds "github.com/jbenet/datastore.go"
+	ds "github.com/ipfs/go-datastore"
 	u "../util"
-	mh "../go-multihash"
+	mh "github.com/multiformats/go-multihash"
 )
 
 type Block struct {

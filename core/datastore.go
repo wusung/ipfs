@@ -2,7 +2,7 @@ package core
 
 import (
 	"../config"
-	ds "github.com/jbenet/datastore.go"
+	ds "github.com/ipfs/go-datastore"
 	"fmt"
 	lds "github.com/jbenet/datastore.go/leveldb"
 )

@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 	"../peer"
-	ma "github.com/jbenet/go-multiaddr"
+	ma "github.com/multiformats/go-multiaddr"
 	u "../util"
 	ident "../identify"
 	proto "github.com/golang/protobuf/proto"

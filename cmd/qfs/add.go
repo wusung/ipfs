@@ -8,7 +8,7 @@ import (
 	"../../importer"
 	dag "../../merkledag"
 	u "../../util"
-	mh "github.com/jbenet/go-multihash"
+	mh "github.com/multiformats/go-multihash"
 	"io/ioutil"
 	"os"
 	"path/filepath"

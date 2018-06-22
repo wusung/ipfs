@@ -3,7 +3,7 @@ package dht
 import (
 	"testing"
 	peer "../../peer"
-	ma "github.com/jbenet/go-multiaddr"
+	ma "github.com/multiformats/go-multiaddr"
 	u "../../util"
 
 	"time"
