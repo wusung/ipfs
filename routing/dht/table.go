@@ -50,7 +50,7 @@ func (rt *RoutingTable) Update(p *peer.Peer) *peer.Peer {
 			if b_id == len(rt.Buckets) - 1 {
 				new_bucket := bucket.Split(b_id, rt.local)
 				if new_bucket.Len() > rt.bucketsize {
-					// This is another very rare and annoying case
+					// TODO: This is a very rare and annoying case
 					panic("Case not handled.")
 				}
 				rt.Buckets = append(rt.Buckets, new_bucket)
@@ -80,7 +80,6 @@ type peerDistance struct {
 	distance ID
 }
 
-
 // peerSorterArr implements sort.Interface to sort peers by xor distance
 type peerSorterArr []*peerDistance
 func (p peerSorterArr) Len() int {return len(p)}
@@ -89,10 +88,27 @@ func (p peerSorterArr) Less(a, b int) bool {
 	return p[a].distance.Less(p[b].distance)
 }
 
+func (rt *RoutingTable) copyPeersFromList(peerArr peerSorterArr, peerList *list.List) peerSorterArr {
+	for e := peerList.Front(); e != nil; e = e.Next() {
+		p := e.Value.(*peer.Peer)
+		p_id := convertPeerID(p.ID)
+		pd := peerDistance{
+			p: p,
+			distance: xor(rt.local, p_id),
+		}
+		peerArr = append(peerArr, &pd)
+	}
+	return peerArr
+}
+
 // Returns a single peer that is nearest to the given ID
 func (rt *RoutingTable) NearestPeer(id ID) *peer.Peer {
 	peers := rt.NearestPeers(id, 1)
-	return peers[0]
+	if len(peers) > 0 {
+		return peers[0]
+	} else {
+		return nil
+	}
 }
 
 // Returns a list of the 'count' closest peers to the given ID
@@ -102,26 +118,26 @@ func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
 	// Get bucket at cpl index or last bucket
 	var bucket *Bucket
 	if cpl >= len(rt.Buckets) {
-		bucket = rt.Buckets[len(rt.Buckets) - 1]
-	} else {
-		bucket = rt.Buckets[cpl]
+		cpl = len(rt.Buckets) - 1
 	}
-
-	if bucket.Len() == 0 {
-		// This can happen, very rarely.
-		panic("Case not yet implemented.")
-	}
+	bucket = rt.Buckets[cpl]
 
 	var peerArr peerSorterArr
-	plist := (*list.List)(bucket)
-	for e := plist.Front(); e != nil; e = e.Next() {
-		p := e.Value.(*peer.Peer)
-		p_id := convertPeerID(p.ID)
-		pd := peerDistance{
-			p: p,
-			distance: xor(rt.local, p_id),
+	if bucket.Len() == 0 {
+		// In the case of an unusual split, one bucket may be empty.
+		// if this happens, search both surrounding buckets for nearest peer
+		if cpl > 0 {
+			plist := (*list.List)(rt.Buckets[cpl - 1])
+			peerArr = rt.copyPeersFromList(peerArr, plist)
 		}
-		peerArr = append(peerArr, &pd)
+
+		if cpl < len(rt.Buckets) - 1 {
+			plist := (*list.List)(rt.Buckets[cpl + 1])
+			peerArr = rt.copyPeersFromList(peerArr, plist)
+		}
+	} else {
+		plist := (*list.List)(bucket)
+		peerArr = rt.copyPeersFromList(peerArr, plist)
 	}
 
 	// Sort by distance to local peer
