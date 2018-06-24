@@ -3,8 +3,11 @@ package dht
 import (
 	"math/rand"
 	"time"
+	"encoding/json"
 
 	proto "github.com/golang/protobuf/proto"
+
+	ma "github.com/jbenet/go-multiaddr"
 
 	peer "../../peer"
 	swarm "../../swarm"
@@ -29,7 +32,7 @@ func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 	var p *peer.Peer
 	p = s.routes.NearestPeer(convertKey(key))
 	if p == nil {
-		panic("Table return nil peer!")
+		panic("Table returned nil peer!")
 	}
 
 	pmes := pDHTMessage{
@@ -38,6 +41,7 @@ func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 		Value: value,
 		Id: GenerateMessageID(),
 	}
+
 	mes := swarm.NewMessage(p, pmes.ToProtobuf())
 	s.network.Chan.Outgoing <- mes
 	return nil
@@ -46,9 +50,9 @@ func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 // GetValue searches for the value corresponding to given Key.
 func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	var p *peer.Peer
-	p = s.routes.NearestPeer(convertkey(key))
+	p = s.routes.NearestPeer(convertKey(key))
 	if p == nil {
-		panic("Table return nil peer!")
+		panic("Table returned nil peer!")
 	}
 
 	pmes := pDHTMessage{
@@ -71,7 +75,7 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 		pmes_out := new(DHTMessage)
 		err := proto.Unmarshal(resp.Data, pmes_out)
 		if err != nil {
-			return nil, err
+			return nil,err
 		}
 		return pmes_out.GetValue(), nil
 	}
@@ -83,18 +87,17 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 // Announce that this node can provide value for given key
 func (s *IpfsDHT) Provide(key u.Key) error {
 	peers := s.routes.NearestPeers(convertKey(key), PoolSize)
-
 	if len(peers) == 0 {
-		// return an error
+		//return an error
 	}
 
 	pmes := pDHTMessage{
 		Type: DHTMessage_ADD_PROVIDER,
 		Key: string(key),
 	}
-	pbmes := pmes.ToProtobuf();
+	pbmes := pmes.ToProtobuf()
 
-	for _, p := range peers {
+	for _,p := range peers {
 		mes := swarm.NewMessage(p, pbmes)
 		s.network.Chan.Outgoing <-mes
 	}
@@ -121,12 +124,37 @@ func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) ([]*peer.Peer,
 		s.Unlisten(pmes.Id)
 		return nil, u.ErrTimeout
 	case resp := <-listen_chan:
-		pmesg_out := new(DHTMessage)
-		err := proto.Unmarshal(resp.Data, pmesg_out)
+		pmes_out := new(DHTMessage)
+		err := proto.Unmarshal(resp.Data, pmes_out)
 		if err != nil {
 			return nil, err
 		}
-		panic("Not implemented.")
+		var addrs map[string]string
+		err := json.Unmarshal(pmes_out.GetValue(), &addrs)
+		if err != nil {
+			return nil, err
+		}
+
+		for key,addr := range addrs {
+			p := s.network.Find(u.Key(key))
+			if p == nil {
+				maddr,err := ma.NewMultiaddr(addr)
+				if err != nil {
+					u.PErr("error connecting to new peer: %s", err)
+					continue
+				}
+				p, err := s.Connect(maddr)
+				if err != nil {
+					u.PErr("error connecting to new peer: %s", err)
+					continue
+				}
+			}
+			s.providerLock.Lock()
+			prov_arr := s.providers[key]
+			s.providers[key] = append(prov_arr, p)
+			s.providerLock.Unlock()
+		}
+
 	}
 }
 
@@ -157,6 +185,6 @@ func (s *IpfsDHT) FindPeer(id peer.ID, timeout time.Duration) (*peer.Peer, error
 		if err != nil {
 			return nil, err
 		}
-		panic("Not implemented.")
+		panic("Not yet implemented.")
 	}
 }

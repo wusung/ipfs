@@ -9,6 +9,7 @@ import (
 	u "../util"
 	ident "../identify"
 	proto "github.com/golang/protobuf/proto"
+	"github.com/libp2p/go-libp2p-swarm"
 )
 
 // Message represents a packet of information sent to or received from a
@@ -290,4 +291,8 @@ Loop:
 	s.connsLock.Lock()
 	delete(s.conns, conn.Peer.Key())
 	s.connsLock.Unlock()
+}
+
+func (s *Swarm) Find(addr *ma.Multiaddr) {
+
 }
