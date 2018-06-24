@@ -3,6 +3,7 @@ package dht
 import (
 	"sync"
 	"time"
+	"encoding/json"
 
 	peer	"../../peer"
 	swarm	"../../swarm"
@@ -30,7 +31,12 @@ type IpfsDHT struct {
 	self *peer.Peer
 
 	// Local data
-	datastore ds.Datastore
+	datastore
+	ds.Datastore
+
+	// Map keys to peers that can provide their value
+	// TODO: implement a TTL on each of these keys
+	providers map[u.Key][]*peer.Peer
 
 	// map of channels waiting for reply messages
 	listeners  map[uint64]chan *swarm.Message
@@ -183,11 +189,44 @@ func (dht *IpfsDHT) handleFindNode(p * peer.Peer, pmes *DHTMessage)  {
 }
 
 func (dht *IpfsDHT) handleGetProviders(p * peer.Peer, pmes *DHTMessage)  {
-	panic("Not implemented.")
+	providers := dht.providers[u.Key(pmes.GetKey())]
+	if providers == nill || len(providers) == 0 {
+		// ?????
+	}
+
+	var addrs []string
+	for _, prov := range providers {
+		ma := prov.NetAddress("tcp")
+		str, err := ma.String()
+		if err != nil {
+			u.PErr("Error: %s", err)
+			continue
+		}
+
+		addrs = append(addrs, str)
+	}
+
+	data, err := json.Marshal(addrs)
+	if err != nil {
+		panic(err)
+	}
+
+	resp := pDHTMessage{
+		Type: DHTMessage_GET_PROVIDERS,
+		Key: pmes.GetKey(),
+		Value: data,
+		Id: pmes.GetId(),
+	}
+
+	mes := swarm.NewMessage(p, resp.ToProtobuf())
+	dht.network.Chan.Outgoing <-mes
 }
 
 func (dht *IpfsDHT) handleAddProvider(p * peer.Peer, pmes *DHTMessage)  {
-	panic("Not implemented.")
+	//TODO: need to implement TTLs on providers
+	key := u.Key(pmes.GetKey())
+	parr := dht.providers[key]
+	dht.providers[key] = append(parr, p)
 }
 
 // Register a handler for a specific message ID, used for getting replies

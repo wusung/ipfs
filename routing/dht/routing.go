@@ -9,7 +9,11 @@ import (
 	peer "../../peer"
 	swarm "../../swarm"
 	u "../../util"
+	"golang.org/x/text/collate"
 )
+
+// Pool size is the number of nodes used for group find/set RPC calls
+var PoolSize = 6
 
 // TODO: determine a way of creating and managing message IDs
 func GenerateMessageID() uint64 {
@@ -25,8 +29,6 @@ func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 	var p *peer.Peer
 	p = s.routes.NearestPeer(convertKey(key))
 	if p == nil {
-		u.POut("nbuckets: %d", len(s.routes.Buckets))
-		u.POut("%d", s.routes.Buckets[0].Len())
 		panic("Table return nil peer!")
 	}
 
@@ -63,7 +65,7 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	timeup := time.After(timeout)
 	select {
 	case <-timeup:
-		// TODO: unregister listener
+		s.Unlisten(pmes.Id)
 		return nil, u.ErrTimeout
 	case resp := <-response_chan:
 		pmes_out := new(DHTMessage)
@@ -80,17 +82,81 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 
 // Announce that this node can provide value for given key
 func (s *IpfsDHT) Provide(key u.Key) error {
-	return u.ErrNotImplemented
+	peers := s.routes.NearestPeers(convertKey(key), PoolSize)
+
+	if len(peers) == 0 {
+		// return an error
+	}
+
+	pmes := pDHTMessage{
+		Type: DHTMessage_ADD_PROVIDER,
+		Key: string(key),
+	}
+	pbmes := pmes.ToProtobuf();
+
+	for _, p := range peers {
+		mes := swarm.NewMessage(p, pbmes)
+		s.network.Chan.Outgoing <-mes
+	}
+	return nil
 }
 
 // FindProviders searches for peers who can provide the value for given key.
-func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) (*peer.Peer, error) {
-	return nil, u.ErrNotImplemented
+func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) ([]*peer.Peer, error) {
+	p := s.routes.NearestPeer(convertKey(key))
+
+	pmes := pDHTMessage{
+		Type: DHTMessage_GET_PROVIDERS,
+		Key: string(key),
+		Id: GenerateMessageID(),
+	}
+
+	mes := swarm.NewMessage(p, pmes.ToProtobuf())
+
+	listen_chan := s.ListenFor(pmes.Id)
+	s.network.Chan.Outgoing <-mes
+	after := time.After(timeout)
+	select {
+	case <-after:
+		s.Unlisten(pmes.Id)
+		return nil, u.ErrTimeout
+	case resp := <-listen_chan:
+		pmesg_out := new(DHTMessage)
+		err := proto.Unmarshal(resp.Data, pmesg_out)
+		if err != nil {
+			return nil, err
+		}
+		panic("Not implemented.")
+	}
 }
 
 // Find specific Peer
 
 // FindPeer searches for a peer with given ID.
 func (s *IpfsDHT) FindPeer(id peer.ID, timeout time.Duration) (*peer.Peer, error) {
-	return nil, u.ErrNotImplemented
+	p := s.routes.NearestPeer(convertPeerID(id))
+
+	pmes := pDHTMessage{
+		Type: DHTMessage_FIND_NODE,
+		Key: string(id),
+		Id: GenerateMessageID(),
+	}
+
+	mes := swarm.NewMessage(p, pmes.ToProtobuf())
+
+	listen_chan := s.ListenFor(pmes.Id)
+	s.network.Chan.Outgoing <-mes
+	after := time.After(timeout)
+	select {
+	case <-after:
+		s.Unlisten(pmes.Id)
+		return nil, u.ErrTimeout
+	case resp := <-listen_chan:
+		pmes_out := new(DHTMessage)
+		err := proto.Unmarshal(resp.Data, pmes_out)
+		if err != nil {
+			return nil, err
+		}
+		panic("Not implemented.")
+	}
 }
