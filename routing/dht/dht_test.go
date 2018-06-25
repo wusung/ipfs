@@ -6,12 +6,8 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 	u "../../util"
 
-	"fmt"
-
 	"time"
 )
-
-var _ = fmt.Println
 
 func TestPing(t *testing.T)  {
 	u.Debug = false

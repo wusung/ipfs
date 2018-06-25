@@ -62,3 +62,8 @@ func (b *Bucket) Split(cpl int, target ID) *Bucket {
 	}
 	return (*Bucket)(out)
 }
+
+func (b *bucket) getIter() *list.Element {
+	bucket_list := (*list.List)(b)
+	return bucket_list.Front()
+}

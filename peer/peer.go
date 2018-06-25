@@ -2,6 +2,7 @@ package peer
 
 import (
 	"encoding/hex"
+	"time"
 
 	u "../util"
 	ma "github.com/multiformats/go-multiaddr"
@@ -29,6 +30,7 @@ type Map map[u.Key]*Peer
 type Peer struct {
 	ID        ID
 	Addresses []*ma.Multiaddr
+	Distince time.Duration
 }
 
 // Key returns the ID as a Key (string) for maps.

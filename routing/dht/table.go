@@ -1,7 +1,6 @@
 package dht
 
 import (
-	"encoding/hex"
 	"container/list"
 	"sort"
 
@@ -9,8 +8,7 @@ import (
 	"golang.org/x/net/html/atom"
 	"github.com/libp2p/go-libp2p-peerstore"
 	"bytes"
-
-	u "../../util"
+	"encoding/hex"
 )
 
 // RoutingTable defines the routing table.
@@ -116,7 +114,6 @@ func (rt *RoutingTable) NearestPeer(id ID) *peer.Peer {
 
 // Returns a list of the 'count' closest peers to the given ID
 func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
-	u.POut("Searching table, size = %d", rt.Size())
 	cpl := xor(id, rt.local).commonPrefixLen()
 
 	// Get bucket at cpl index or last bucket
@@ -150,8 +147,6 @@ func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
 	var out []*peer.Peer
 	for i := 0; i < count && i < peerArr.Len(); i++ {
 		out = append(out, peerArr[i].p)
-		u.POut("peer out: %s - %s", peerArr[i].p.ID.Pretty(),
-		hex.EncodeToString(xor(id, convertPeerID(peerArr[i].p.ID))))
 	}
 
 	return out
@@ -162,10 +157,21 @@ func (rt *RoutingTable) NearestNode(key u.Key) *peer.Peer {
 	panic("Function not implemented.")
 }
 
-func (rt *RoutingTable Size() int {
+func (rt *RoutingTable) Size() int {
 	var tot int
 	for _, buck := range rt.Buckets {
 		tot += buck.Len()
 	}
 	return tot
+}
+
+// NOTE: This is potentially unsafe... use at your own risk
+func (rt *RoutingTable) listpeers() []*peer.Peer {
+	var peers []*peer.Peer
+	for _, buck := range rt.Buckets {
+		for e := buck.getIter(); e != nil; e = e.Next() {
+			peers = append(peers, e.Value.(*peer.Peer))
+		}
+	}
+	return peers
 }
