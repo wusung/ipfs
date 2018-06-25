@@ -1,6 +1,8 @@
 package peer
 
 import (
+	"encoding/hex"
+
 	u "../util"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
@@ -13,6 +15,10 @@ type ID mh.Multihash
 // Utililty function for comparing two peer ID's
 func (id ID) Equal(other ID) bool {
 	return bytes.Equal(id, other)
+}
+
+func (id ID) Pretty() string {
+	return hex.EncodeToString(id)
 }
 
 // Map maps Key (string) : *Peer (slices are not comparable).
