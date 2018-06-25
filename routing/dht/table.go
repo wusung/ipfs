@@ -1,6 +1,7 @@
 package dht
 
 import (
+	"encoding/hex"
 	"container/list"
 	"sort"
 
@@ -8,6 +9,8 @@ import (
 	"golang.org/x/net/html/atom"
 	"github.com/libp2p/go-libp2p-peerstore"
 	"bytes"
+
+	u "../../util"
 )
 
 // RoutingTable defines the routing table.
@@ -88,13 +91,13 @@ func (p peerSorterArr) Less(a, b int) bool {
 	return p[a].distance.Less(p[b].distance)
 }
 
-func (rt *RoutingTable) copyPeersFromList(peerArr peerSorterArr, peerList *list.List) peerSorterArr {
+func copyPeersFromList(target ID, peerArr peerSorterArr, peerList *list.List) peerSorterArr {
 	for e := peerList.Front(); e != nil; e = e.Next() {
 		p := e.Value.(*peer.Peer)
 		p_id := convertPeerID(p.ID)
 		pd := peerDistance{
 			p: p,
-			distance: xor(rt.local, p_id),
+			distance: xor(target, p_id),
 		}
 		peerArr = append(peerArr, &pd)
 	}
@@ -113,6 +116,7 @@ func (rt *RoutingTable) NearestPeer(id ID) *peer.Peer {
 
 // Returns a list of the 'count' closest peers to the given ID
 func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
+	u.POut("Searching table, size = %d", rt.Size())
 	cpl := xor(id, rt.local).commonPrefixLen()
 
 	// Get bucket at cpl index or last bucket
@@ -128,16 +132,16 @@ func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
 		// if this happens, search both surrounding buckets for nearest peer
 		if cpl > 0 {
 			plist := (*list.List)(rt.Buckets[cpl - 1])
-			peerArr = rt.copyPeersFromList(peerArr, plist)
+			peerArr = copyPeersFromList(id, peerArr, plist)
 		}
 
 		if cpl < len(rt.Buckets) - 1 {
 			plist := (*list.List)(rt.Buckets[cpl + 1])
-			peerArr = rt.copyPeersFromList(peerArr, plist)
+			peerArr = copyPeersFromList(id, peerArr, plist)
 		}
 	} else {
 		plist := (*list.List)(bucket)
-		peerArr = rt.copyPeersFromList(peerArr, plist)
+		peerArr = copyPeersFromList(id, peerArr, plist)
 	}
 
 	// Sort by distance to local peer
@@ -146,11 +150,22 @@ func (rt *RoutingTable) NearestPeers(id ID, count int) []*peer.Peer {
 	var out []*peer.Peer
 	for i := 0; i < count && i < peerArr.Len(); i++ {
 		out = append(out, peerArr[i].p)
+		u.POut("peer out: %s - %s", peerArr[i].p.ID.Pretty(),
+		hex.EncodeToString(xor(id, convertPeerID(peerArr[i].p.ID))))
 	}
+
 	return out
 }
 
 //TODO: make this accept an ID, requires method of converting keys to IDs
 func (rt *RoutingTable) NearestNode(key u.Key) *peer.Peer {
 	panic("Function not implemented.")
+}
+
+func (rt *RoutingTable Size() int {
+	var tot int
+	for _, buck := range rt.Buckets {
+		tot += buck.Len()
+	}
+	return tot
 }
