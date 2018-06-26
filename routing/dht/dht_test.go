@@ -7,6 +7,7 @@ import (
 	u "../../util"
 
 	"time"
+	"fmt"
 )
 
 func TestPing(t *testing.T)  {
@@ -105,5 +106,25 @@ func TestValueGetSet(t *testing.T) {
 
 	if string(val) != "world" {
 		t.Fatal("Expected 'world' get %s", string(val))
+	}
+}
+
+func TestProviders(t *testing.T) {
+	u.Debug = true
+	var addrs []*ma.Multiaddr
+	for i := 0; i < 4; i++ {
+		a, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", 5000 + i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		addrs := append(addrs, a)
+	}
+
+	var peers []*peer.Peer
+	for i := 0; i < 4; i++ {
+		p := new(peer.Peer)
+		p.AddAddress(addrs[i])
+		p.ID = peer.ID([]byte(fmt.Sprintf("peer_%d", i)))
+		peers = append(peers, p)
 	}
 }
