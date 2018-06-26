@@ -181,7 +181,7 @@ func (s *IpfsDHT) FindPeer(id peer.ID, timeout time.Duration) (*peer.Peer, error
 
 	mes := swarm.NewMessage(p, pmes.ToProtobuf())
 
-	listen_chan := s.ListenFor(pmes.Id, 1)
+	listen_chan := s.ListenFor(pmes.Id, 1, time.Minute)
 	s.network.Chan.Outgoing <-mes
 	after := time.After(timeout)
 	select {
@@ -224,7 +224,7 @@ func (dht *IpfsDHT) Ping(p *peer.Peer, timeout time.Duration) error {
 	mes := swarm.NewMessage(p, pmes.ToProtobuf())
 
 	before := time.Now()
-	response_chan := dht.ListenFor(pmes.Id, 1)
+	response_chan := dht.ListenFor(pmes.Id, 1, time.Minute)
 	dht.network.Chan.Outgoing <- mes
 
 	tout := time.After(timeout)
@@ -254,7 +254,7 @@ func (dht *IpfsDHT) GetDiagnostic(timeout time.Duration) ([]*diagInfo, error) {
 		Id: GenerateMessageID(),
 	}
 
-	listen_chan := dht.ListenFor(pmes.Id, len(target))
+	listen_chan := dht.ListenFor(pmes.Id, len(target), time.Minute * 2)
 
 	pbmes := pmes.ToProtobuf()
 	for _, p := range target {
