@@ -3,6 +3,7 @@ package peer
 import (
 	"encoding/hex"
 	"time"
+	"sync"
 
 	u "../util"
 	ma "github.com/multiformats/go-multiaddr"
@@ -30,7 +31,9 @@ type Map map[u.Key]*Peer
 type Peer struct {
 	ID        ID
 	Addresses []*ma.Multiaddr
-	Distince time.Duration
+
+	distance time.Duration
+	distlock sync.RWMutex
 }
 
 // Key returns the ID as a Key (string) for maps.
@@ -58,4 +61,14 @@ func (p *Peer) NetAddress(n string) *ma.Multiaddr {
 		}
 	}
 	return nil
+}
+
+func (p *Peer) GetDistance() time.Duration {
+	return p.distance
+}
+
+func (p *Peer) SetDistance(dist time.Duration)  {
+	p.distlock.Lock()
+	p.distance = dist
+	p.distlock.Unlock()
 }
