@@ -11,7 +11,7 @@ import (
 )
 
 func _randPeer() *peer.Peer {
-	p := new(*peer.Peer)
+	p := new(peer.Peer)
 	p.ID = make(peer.ID, 16)
 	crand.Read(p.ID)
 	return p
@@ -41,12 +41,12 @@ func TestBucket(t *testing.T) {
 	i := rand.Intn(len(peers))
 	e := b.Find(peers[i].ID)
 	if e == nil {
-		t.Error("Failed to find peer: %v", peers[i])
+		t.Errorf("Failed to find peer: %v", peers[i])
 	}
 
 	spl := b.Split(0, ConvertPeerID(local.ID))
-	list := (*list.List)(b)
-	for e := list.Front(); e != nil; e = e.Next() {
+	llist := (*list.List)(b)
+	for e := llist.Front(); e != nil; e = e.Next() {
 		p := ConvertPeerID(e.Value.(*peer.Peer).ID)
 		cpl := xor(p, local_id).commonPrefixLen()
 		if cpl > 0 {
@@ -55,12 +55,11 @@ func TestBucket(t *testing.T) {
 	}
 
 	rlist := (*list.List)(spl)
-	for e := rlist.Front(); e != nil; e = e.Next {
+	for e := rlist.Front(); e != nil; e = e.Next() {
 		p := ConvertPeerID(e.Value.(*peer.Peer).ID)
 		cpl := xor(p, local_id).commonPrefixLen()
 		if cpl == 0 {
 			t.Fatalf("Split failed. found id with cpl == 0 in non 0 bucket")
-
 		}
 	}
 }
@@ -70,7 +69,7 @@ func TestTableUpdate(t *testing.T) {
 	local := _randPeer()
 	rt := NewRoutingTable(10, ConvertPeerID(local.ID))
 
-	peers := make([]peer.Peer, 100)
+	peers := make([]*peer.Peer, 100)
 	for i := 0; i < 100; i++ {
 		peers[i] = _randPeer()
 	}
@@ -109,7 +108,7 @@ func TestTableFind(t *testing.T) {
 	}
 }
 
-func TestTableFindMultiple(t *testing.T)  {
+func TestTableFindMultiple(t *testing.T) {
 	local := _randPeer()
 	rt := NewRoutingTable(20, ConvertPeerID(local.ID))
 

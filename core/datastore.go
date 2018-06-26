@@ -1,10 +1,10 @@
 package core
 
 import (
-	"../config"
-	ds "github.com/ipfs/go-datastore"
 	"fmt"
+	ds "github.com/ipfs/go-datastore"
 	lds "github.com/jbenet/datastore.go/leveldb"
+	"../config"
 )
 
 func makeDatastore(cfg *config.Datastore) (ds.Datastore, error) {

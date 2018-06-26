@@ -112,6 +112,6 @@ func TestSwarm(t *testing.T) {
 	fmt.Println("closing")
 	swarm.Close()
 	for _, listener := range listeners {
-		(listener).(*net.TCPListener).Close()
+		listener.(*net.TCPListener).Close()
 	}
 }

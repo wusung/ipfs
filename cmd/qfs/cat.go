@@ -24,7 +24,6 @@ func catCmd(c *commander.Command, inp []string) error {
 		return nil
 	}
 
-
 	n, err := localNode()
 	if err != nil {
 		return err

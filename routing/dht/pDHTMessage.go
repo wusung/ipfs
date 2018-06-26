@@ -1,17 +1,33 @@
 package dht
 
+import "github.com/btcsuite/btcd/peer"
+
 // A helper struct to make working with protbuf types easier
-type pDHTMessage struct {
-	Type DHTMessage_MessageType
-	Key string
-	Value []byte
+type DHTMessage struct {
+	Type     PBDHTMessage_MessageType
+	Key      string
+	Value    []byte
 	Response bool
-	Id uint64
-	Success bool
+	Id       uint64
+	Success  bool
+	Peers    []*peer.Peer
 }
 
-func (m *pDHTMessage) ToProtobuf() *DHTMessage {
-	pmes := new(DHTMessage)
+func peerInfo(p *peer.Peer) *PBDHTMessage_PBPeer {
+	pbp := new(PBDHTMessage_PBPeer)
+	addr, err := p.Addresses[0].String()
+	if err != nil {
+		//Temp: what situations could cause this?
+		panic(err)
+	}
+	pbp.Addr = &addr
+	pid := string(p.ID)
+	pbp.Id = &pid
+	return pbp
+}
+
+func (m *DHTMessage) ToProtobuf() *PBDHTMessage {
+	pmes := new(PBDHTMessage)
 	if m.Value != nil {
 		pmes.Value = m.Value
 	}
@@ -21,6 +37,9 @@ func (m *pDHTMessage) ToProtobuf() *DHTMessage {
 	pmes.Response = &m.Response
 	pmes.Id = &m.Id
 	pmes.Success = &m.Success
+	for _, p := range m.Peers {
+		pmes.Peers = append(pmes.Peers, peerInfo(p))
+	}
 
 	return pmes
 }

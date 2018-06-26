@@ -50,10 +50,10 @@ func (b *Bucket) Split(cpl int, target ID) *Bucket {
 	e := bucket_list.Front()
 	for e != nil {
 		peer_id := ConvertPeerID(e.Value.(*peer.Peer).ID)
-		peer_cpl := xor(peer_id, target).commonPrefixLen()
+		peer_cpl := prefLen(peer_id, target)
 		if peer_cpl > cpl {
 			cur := e
-			out.PostBack(e.Value)
+			out.PushBack(e.Value)
 			e = e.Next()
 			bucket_list.Remove(cur)
 			continue
@@ -63,7 +63,7 @@ func (b *Bucket) Split(cpl int, target ID) *Bucket {
 	return (*Bucket)(out)
 }
 
-func (b *bucket) getIter() *list.Element {
+func (b *Bucket) getIter() *list.Element {
 	bucket_list := (*list.List)(b)
 	return bucket_list.Front()
 }

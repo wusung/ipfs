@@ -10,9 +10,9 @@ import (
 	"../peer"
 )
 
-// IPFS Core module. It represents an IPFS instance.
-
+// IpfsNode is IPFS Core module. It represents an IPFS instance.
 type IpfsNode struct {
+
 	// the node's configuration
 	Config *config.Config
 
@@ -47,9 +47,10 @@ type IpfsNode struct {
 	// Namesys *namesys.Namesys
 }
 
+// NewIpfsNode constructs a new IpfsNode based on the given config.
 func NewIpfsNode(cfg *config.Config) (*IpfsNode, error) {
 	if cfg == nil {
-		return nil, fmt.Errorf("configuration required.")
+		return nil, fmt.Errorf("configuration required")
 	}
 
 	d, err := makeDatastore(cfg.Datastore)

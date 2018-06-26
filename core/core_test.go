@@ -19,14 +19,14 @@ func TestDatastores(t *testing.T) {
 		nil,
 	}
 
-	for i, c := range (good) {
+	for i, c := range good {
 		n, err := NewIpfsNode(c)
 		if n == nil || err != nil {
 			t.Error("Should have constructed.", i, err)
 		}
 	}
 
-	for i, c := range (bad) {
+	for i, c := range bad {
 		n, err := NewIpfsNode(c)
 		if n != nil || err == nil {
 			t.Error("Should have failed to construct.", i)

@@ -20,7 +20,7 @@ func (id ID) Equal(other ID) bool {
 }
 
 func (id ID) Pretty() string {
-	return hex.EncodeToString(id)
+	return b58.Encode(id)
 }
 
 // Map maps Key (string) : *Peer (slices are not comparable).
@@ -32,8 +32,8 @@ type Peer struct {
 	ID        ID
 	Addresses []*ma.Multiaddr
 
-	distance time.Duration
-	distlock sync.RWMutex
+	latency   time.Duration
+	latenLock sync.RWMutex
 }
 
 // Key returns the ID as a Key (string) for maps.
@@ -63,12 +63,15 @@ func (p *Peer) NetAddress(n string) *ma.Multiaddr {
 	return nil
 }
 
-func (p *Peer) GetDistance() time.Duration {
-	return p.distance
+func (p *Peer) GetLatency() (out time.Duration) {
+	p.latenLock.RLock()
+	out = p.latency
+	p.latenLock.RUnlock()
+	return
 }
 
-func (p *Peer) SetDistance(dist time.Duration)  {
-	p.distlock.Lock()
-	p.distance = dist
-	p.distlock.Unlock()
+func (p *Peer) SetLatency(laten time.Duration) {
+	p.latenLock.Lock()
+	p.latency = laten
+	p.latenLock.Unlock()
 }

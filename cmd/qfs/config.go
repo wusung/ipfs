@@ -72,6 +72,7 @@ func configCmd(c *commander.Command, inp []string) error {
 		if err != nil {
 			return fmt.Errorf("Failed to get config value: %s", err)
 		}
+
 		strval, ok := value.(string)
 		if ok {
 			u.POut("%s\n", strval)
@@ -88,9 +89,9 @@ func configCmd(c *commander.Command, inp []string) error {
 	// Setter (>1 params)
 	err = config.WriteConfigKey(filename, inp[0], inp[1])
 	if err != nil {
-		u.POut("Failed to set config value: " + err.Error() + "\n")
 		return fmt.Errorf("Failed to set config value: %s", err)
 	}
+
 	return nil
 }
 
@@ -100,7 +101,6 @@ func configCat(filename string) error {
 	if err != nil {
 		return err
 	}
-	return nil
 	defer file.Close()
 
 	if _, err = io.Copy(os.Stdout, file); err != nil {
@@ -121,3 +121,4 @@ func configEditor(filename string) error {
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	return cmd.Run()
 }
+

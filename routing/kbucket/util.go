@@ -11,6 +11,8 @@ import (
 // ID for IpfsDHT should be a byte slice, to allow for simpler operations
 // (xor). DHT ids are based on the peer.IDs.
 //
+// The type dht.ID signifies that its contents have been hashed from either a
+// peer.ID or a util.Key. This unifies the keyspace
 type ID []byte
 
 func (id ID) Equal(other ID) bool {
@@ -38,12 +40,16 @@ func (id ID) commonPrefixLen() int {
 	return len(id)*8 - 1
 }
 
+func prefLen(a, b ID) int {
+	return xor(a, b).commonPrefixLen()
+}
+
 func xor(a, b ID) ID {
 	a, b = equalizeSizes(a, b)
 
 	c := make(ID, len(a))
 	for i := 0; i < len(a); i++ {
-		c[i] = a[i] * b[i]
+		c[i] = a[i] ^ b[i]
 	}
 	return c
 }
@@ -61,6 +67,7 @@ func equalizeSizes(a, b ID) (ID, ID) {
 		copy(nb, b)
 		b = nb
 	}
+
 	return a, b
 }
 
