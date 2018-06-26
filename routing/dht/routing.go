@@ -13,6 +13,7 @@ import (
 	peer "../../peer"
 	swarm "../../swarm"
 	u "../../util"
+	kb "../kbucket"
 	"golang.org/x/text/collate"
 )
 
@@ -32,7 +33,7 @@ func GenerateMessageID() uint64 {
 // PutValue adds value corresponding to given Key.
 func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 	var p *peer.Peer
-	p = s.routes[0].NearestPeer(convertKey(key))
+	p = s.routes[0].NearestPeer(kb.ConvertKey(key))
 	if p == nil {
 		panic("Table returned nil peer!")
 	}
@@ -54,7 +55,7 @@ func (s *IpfsDHT) PutValue(key u.Key, value []byte) error {
 // returned along with util.ErrSearchIncomplete
 func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 	var p *peer.Peer
-	p = s.routes[0].NearestPeer(convertKey(key))
+	p = s.routes[0].NearestPeer(kb.ConvertKey(key))
 	if p == nil {
 		panic("Table returned nil peer!")
 	}
@@ -94,7 +95,7 @@ func (s *IpfsDHT) GetValue(key u.Key, timeout time.Duration) ([]byte, error) {
 
 // Announce that this node can provide value for given key
 func (s *IpfsDHT) Provide(key u.Key) error {
-	peers := s.routes[0].NearestPeers(convertKey(key), PoolSize)
+	peers := s.routes[0].NearestPeers(kb.ConvertKey(key), PoolSize)
 	if len(peers) == 0 {
 		//return an error
 	}
@@ -114,7 +115,7 @@ func (s *IpfsDHT) Provide(key u.Key) error {
 
 // FindProviders searches for peers who can provide the value for given key.
 func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) ([]*peer.Peer, error) {
-	p := s.routes[0].NearestPeer(convertKey(key))
+	p := s.routes[0].NearestPeer(kb.ConvertKey(key))
 
 	pmes := pDHTMessage{
 		Type: DHTMessage_GET_PROVIDERS,
@@ -171,7 +172,7 @@ func (s *IpfsDHT) FindProviders(key u.Key, timeout time.Duration) ([]*peer.Peer,
 
 // FindPeer searches for a peer with given ID.
 func (s *IpfsDHT) FindPeer(id peer.ID, timeout time.Duration) (*peer.Peer, error) {
-	p := s.routes[0].NearestPeer(convertPeerID(id))
+	p := s.routes[0].NearestPeer(kb.ConvertPeerID(id))
 
 	pmes := pDHTMessage{
 		Type: DHTMessage_FIND_NODE,
@@ -246,7 +247,7 @@ func (dht *IpfsDHT) GetDiagnostic(timeout time.Duration) ([]*diagInfo, error) {
 	u.DOut("Begin Diagnostic")
 	//Send to N closest peers
 
-	target := dht.routes[0].NearestPeers(convertPeerID(dht.self.ID), 10)
+	target := dht.routes[0].NearestPeers(kb.ConvertPeerID(dht.self.ID), 10)
 
 	// TODO: Add timeout to this struct so nodes know when to return
 	pmes := pDHTMessage{

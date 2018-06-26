@@ -1,4 +1,4 @@
-package dht
+package kbucket
 
 import (
 	"container/list"
@@ -49,7 +49,7 @@ func (b *Bucket) Split(cpl int, target ID) *Bucket {
 	out := list.New()
 	e := bucket_list.Front()
 	for e != nil {
-		peer_id := convertPeerID(e.Value.(*peer.Peer).ID)
+		peer_id := ConvertPeerID(e.Value.(*peer.Peer).ID)
 		peer_cpl := xor(peer_id, target).commonPrefixLen()
 		if peer_cpl > cpl {
 			cur := e

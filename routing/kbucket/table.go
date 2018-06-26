@@ -1,4 +1,4 @@
-package dht
+package kbucket
 
 import (
 	"container/list"
@@ -41,7 +41,7 @@ func NewRoutingTable(bucketsize int, local_id ID) *RoutingTable {
 func (rt *RoutingTable) Update(p *peer.Peer) *peer.Peer {
 	rt.tablock.Lock()
 	defer rt.tablock.Unlock()
-	peer_id := convertPeerID(p.ID)
+	peer_id := ConvertPeerID(p.ID)
 	cpl := xor(peer_id, rt.local).commonPrefixLen()
 
 	b_id := cpl
@@ -100,7 +100,7 @@ func (p peerSorterArr) Less(a, b int) bool {
 func copyPeersFromList(target ID, peerArr peerSorterArr, peerList *list.List) peerSorterArr {
 	for e := peerList.Front(); e != nil; e. = e.Next() {
 		p := e.Value.(*peer.Peer)
-		p_id := convertPeerID(p.ID)
+		p_id := ConvertPeerID(p.ID)
 		pd := peerDistance{
 			p: p,
 			distance: xor(target, p_id),
