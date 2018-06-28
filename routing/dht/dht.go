@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 
 	"../../peer"
+	kb "../kbucket"
 	"../../swarm"
 	u "../../util"
-	kb "../kbucket"
 	"../../identify"
 
 	ma "github.com/multiformats/go-multiaddr"
@@ -40,6 +40,7 @@ type IpfsDHT struct {
 	datastore ds.Datastore
 
 	// Map keys to peers that can provide their value
+	// TODO: implement a TTL on each of these keys
 	providers    map[u.Key][]*providerInfo
 	providerLock sync.RWMutex
 

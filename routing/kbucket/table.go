@@ -85,7 +85,7 @@ func (rt *RoutingTable) Update(p *peer.Peer) *peer.Peer {
 
 // A helper struct to sort peers by their distance to the local node
 type peerDistance struct {
-	p *peer.Peer
+	p        *peer.Peer
 	distance ID
 }
 
@@ -112,6 +112,15 @@ func copyPeersFromList(target ID, peerArr peerSorterArr, peerList *list.List) pe
 		}
 	}
 	return peerArr
+}
+
+// Find a specific peer by ID or return nil
+func (rt *RoutingTable) Find(id peer.ID) *peer.Peer {
+	srch := rt.NearestPeers(ConvertPeerID(id), 1)
+	if len(srch) == 0 || !srch[0].ID.Equal(id) {
+		return nil
+	}
+	return srch[0]d
 }
 
 // Returns a single peer that is nearest to the given ID

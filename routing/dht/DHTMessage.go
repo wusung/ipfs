@@ -1,6 +1,9 @@
 package dht
 
-import "github.com/btcsuite/btcd/peer"
+import (
+	peer "../../peer"
+	"golang.org/x/crypto/openpgp"
+)
 
 // A helper struct to make working with protbuf types easier
 type DHTMessage struct {
@@ -11,6 +14,19 @@ type DHTMessage struct {
 	Id       uint64
 	Success  bool
 	Peers    []*peer.Peer
+}
+
+func peerInfo(p *peer.Peer) *PBDHTMessage_PBPeer {
+	pbp := new(PBDHTMessage_PBPeer)
+	addr, err := p.Addresses[0].String()
+	if err != nil {
+		//Temp: what situations could cause this?
+		panic(err)
+	}
+	pbp.Addr = &addr
+	pid := string(p.ID)
+	pbp.Id = &pid
+	return pbp
 }
 
 func peerInfo(p *peer.Peer) *PBDHTMessage_PBPeer {

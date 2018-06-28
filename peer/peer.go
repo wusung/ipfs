@@ -1,13 +1,14 @@
 package peer
 
 import (
-	"encoding/hex"
 	"time"
 	"sync"
 
 	u "../util"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
+	b58 "github.com/jbenet/go-base58"
+
 	"bytes"
 )
 
